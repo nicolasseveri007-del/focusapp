@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FocusApp</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0f;
+    --surface: #161618;
+    --surface2: #1e1e21;
+    --border: #2a2a2e;
+    --accent: #c8f135;
+    --accent2: #ff6b35;
+    --accent3: #35b8f1;
+    --text: #f0f0ee;
+    --muted: #6b6b72;
+    --danger: #ff4444;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 28px;
+    letter-spacing: 4px;
+    color: var(--accent);
+  }
+
+  .logo span { color: var(--text); }
+
+  .date-badge {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  /* NAV TABS */
+  .tabs {
+    display: flex;
+    gap: 0;
+    padding: 0 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .tab {
+    padding: 14px 24px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+
+  /* MAIN CONTENT */
+  .main { padding: 32px; max-width: 900px; margin: 0 auto; }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ===================== POMODORO ===================== */
+  .pomodoro-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+
+  .timer-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 40px 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .timer-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; left: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(200,241,53,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .timer-mode-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  #timer-task-label {
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 20px;
+    min-height: 20px;
+    font-weight: 500;
+  }
+
+  .timer-display {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 96px;
+    letter-spacing: 4px;
+    line-height: 1;
+    color: var(--text);
+    margin-bottom: 8px;
+    transition: color 0.3s;
+  }
+
+  .timer-display.warning { color: var(--accent2); }
+  .timer-display.break { color: var(--accent3); }
+
+  .timer-progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+
+  .timer-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 1s linear;
+    width: 100%;
+  }
+
+  .timer-controls { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  .btn {
+    padding: 11px 22px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+
+  .btn-primary { background: var(--accent); color: #0e0e0f; font-weight: 700; }
+  .btn-primary:hover { background: #d8ff45; transform: translateY(-1px); }
+  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+  .btn-danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  .btn-danger:hover { background: var(--danger); color: white; }
+
+  .timer-modes {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .mode-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .mode-btn.active { background: var(--surface2); color: var(--text); border-color: var(--muted); }
+
+  .pomodoro-stats {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .stats-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 20px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat-row:last-child { border-bottom: none; }
+
+  .stat-label { font-size: 13px; color: var(--muted); }
+  .stat-value { font-family: 'Space Mono', monospace; font-size: 20px; color: var(--accent); font-weight: 700; }
+
+  .session-log {
+    margin-top: 16px;
+  }
+
+  .log-entry {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    padding: 4px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .log-entry span { color: var(--accent3); }
+
+  /* ===================== TAREAS ===================== */
+  .tasks-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 24px;
+  }
+
+  .section-title {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 42px;
+    letter-spacing: 3px;
+    color: var(--text);
+  }
+
+  .progress-summary {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .progress-summary strong { color: var(--accent); }
+
+  .add-task-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input:focus { border-color: var(--accent); }
+  .input::placeholder { color: var(--muted); }
+
+  .select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .task-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+
+  .filter-btn.active { background: var(--accent); color: #0e0e0f; border-color: var(--accent); font-weight: 700; }
+
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .task-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .task-item:hover { border-color: var(--muted); }
+  .task-item.done { opacity: 0.5; }
+
+  .task-check {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .task-item.done .task-check {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .task-check svg { display: none; }
+  .task-item.done .task-check svg { display: block; }
+
+  .task-text { flex: 1; font-size: 14px; }
+  .task-item.done .task-text { text-decoration: line-through; color: var(--muted); }
+
+  .task-priority {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .priority-alta { background: rgba(255,107,53,0.15); color: var(--accent2); }
+  .priority-media { background: rgba(200,241,53,0.1); color: var(--accent); }
+  .priority-baja { background: rgba(53,184,241,0.1); color: var(--accent3); }
+
+  .task-start-btn {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .task-start-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .task-delete {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .task-item:hover .task-delete { opacity: 1; }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+  }
+
+  /* ===================== HÁBITOS ===================== */
+  .habits-grid { display: flex; flex-direction: column; gap: 16px; }
+
+  .habit-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .habit-icon {
+    font-size: 28px;
+    width: 52px; height: 52px;
+    background: var(--surface2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .habit-info { flex: 1; }
+
+  .habit-name {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .habit-streak {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 1px;
+  }
+
+  .habit-streak strong { color: var(--accent2); }
+
+  .habit-week {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .day-dot {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .day-dot.done { background: var(--accent); border-color: var(--accent); color: #0e0e0f; font-weight: 700; }
+  .day-dot.today { border-color: var(--accent); }
+
+  .habit-toggle {
+    width: 52px; height: 28px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+
+  .habit-toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: all 0.3s;
+  }
+
+  .habit-toggle.on { background: var(--accent); border-color: var(--accent); }
+  .habit-toggle.on::after { left: calc(100% - 23px); background: #0e0e0f; }
+
+  /* ADD HABIT */
+  .add-habit-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  /* STATS SECTION */
+  .habits-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-card-value {
+    font-family: 'Bebas Neue', cursive;
+    font-size: 48px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+
+  .stat-card-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--accent);
+    color: #0e0e0f;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    font-weight: 700;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 9999;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* MOTIVATIONAL BANNER */
+  .motivator {
+    background: linear-gradient(135deg, rgba(200,241,53,0.08), rgba(255,107,53,0.05));
+    border: 1px solid rgba(200,241,53,0.2);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .motivator-icon { font-size: 24px; }
+  .motivator-text { font-size: 13px; line-height: 1.5; color: var(--text); }
+  .motivator-text strong { color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .pomodoro-wrap { grid-template-columns: 1fr; }
+    .timer-display { font-size: 72px; }
+    .habits-stats { grid-template-columns: repeat(2, 1fr); }
+    .main { padding: 16px; }
+    header { padding: 16px; }
+    .tabs { padding: 0 16px; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">FOCUS<span>APP</span></div>
+  <div class="date-badge" id="date-display"></div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('pomodoro', this)">⏱ Pomodoro</button>
+  <button class="tab" onclick="switchTab('tareas', this)">📋 Tareas</button>
+  <button class="tab" onclick="switchTab('habitos', this)">🔥 Hábitos</button>
+</div>
+
+<div class="main">
+
+  <!-- ========== POMODORO ========== -->
+  <div id="sec-pomodoro" class="section active">
+    <div class="motivator">
+      <div class="motivator-icon">💡</div>
+      <div class="motivator-text" id="motivator-text">Elegí una tarea de abajo y arrancá un Pomodoro. <strong>25 minutos de foco total, sin celular.</strong> Lo podés hacer.</div>
+    </div>
+
+    <div class="pomodoro-wrap">
+      <div class="timer-card">
+        <div class="timer-mode-label" id="timer-mode-label">FOCO</div>
+        <div id="timer-task-label"></div>
+        <div class="timer-display" id="timer-display">25:00</div>
+        <div class="timer-progress-bar">
+          <div class="timer-progress-fill" id="timer-progress-fill"></div>
+        </div>
+        <div class="timer-controls">
+          <button class="btn btn-primary" id="start-btn" onclick="toggleTimer()">ARRANCAR</button>
+          <button class="btn btn-ghost" onclick="resetTimer()">RESET</button>
+        </div>
+        <div class="timer-modes">
+          <button class="mode-btn active" onclick="setMode('focus', this)">Foco 25'</button>
+          <button class="mode-btn" onclick="setMode('short', this)">Descanso 5'</button>
+          <button class="mode-btn" onclick="setMode('long', this)">Descanso 15'</button>
+        </div>
+      </div>
+
+      <div class="pomodoro-stats">
+        <div class="stats-title">Estadísticas de hoy</div>
+        <div class="stat-row">
+          <div class="stat-label">Pomodoros completados</div>
+          <div class="stat-value" id="stat-pomodoros">0</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">Minutos enfocado</div>
+          <div class="stat-value" id="stat-minutes">0</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat-label">Tarea activa</div>
+          <div class="stat-value" style="font-size:12px; color: var(--muted);" id="stat-active-task">—</div>
+        </div>
+        <div class="session-log" id="session-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== TAREAS ========== -->
+  <div id="sec-tareas" class="section">
+    <div class="tasks-header">
+      <div class="section-title">TAREAS</div>
+      <div class="progress-summary" id="task-progress">0 / 0 completadas</div>
+    </div>
+    <div class="add-task-row">
+      <input class="input" id="task-input" placeholder="Agregar tarea... (ej: Leer cap 3 de Cálculo)" onkeydown="if(event.key==='Enter') addTask()">
+      <select class="select" id="task-priority">
+        <option value="alta">🔴 Alta</option>
+        <option value="media" selected>🟡 Media</option>
+        <option value="baja">🔵 Baja</option>
+      </select>
+      <button class="btn btn-primary" onclick="addTask()">+ ADD</button>
+    </div>
+    <div class="task-filters">
+      <button class="filter-btn active" onclick="setFilter('todas', this)">Todas</button>
+      <button class="filter-btn" onclick="setFilter('pendientes', this)">Pendientes</button>
+      <button class="filter-btn" onclick="setFilter('completadas', this)">Completadas</button>
+    </div>
+    <div class="task-list" id="task-list">
+      <div class="empty-state">NINGUNA TAREA AÚN<br><br>AGREGÁ TU PRIMERA TAREA ARRIBA</div>
+    </div>
+  </div>
+
+  <!-- ========== HÁBITOS ========== -->
+  <div id="sec-habitos" class="section">
+    <div class="tasks-header">
+      <div class="section-title">HÁBITOS</div>
+    </div>
+
+    <div class="habits-stats">
+      <div class="stat-card">
+        <div class="stat-card-value" id="h-stat-hoy">0</div>
+        <div class="stat-card-label">Completados hoy</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value" id="h-stat-racha">0</div>
+        <div class="stat-card-label">Mejor racha días</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-card-value" id="h-stat-total">0</div>
+        <div class="stat-card-label">Total esta semana</div>
+      </div>
+    </div>
+
+    <div class="add-habit-row">
+      <input class="input" id="habit-input" placeholder="Nuevo hábito... (ej: Sin celular 2h)" onkeydown="if(event.key==='Enter') addHabit()">
+      <input class="input" id="habit-emoji" placeholder="🎯" style="max-width:60px; text-align:center;">
+      <button class="btn btn-primary" onclick="addHabit()">+ ADD</button>
+    </div>
+
+    <div class="habits-grid" id="habits-grid"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===================== STATE =====================
+const today = new Date();
+const todayStr = today.toISOString().split('T')[0];
+const days = ['D','L','M','M','J','V','S'];
+const dayNames = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+// Load from localStorage
+let tasks = JSON.parse(localStorage.getItem('fa_tasks') || '[]');
+let habits = JSON.parse(localStorage.getItem('fa_habits') || '[]');
+let pomStats = JSON.parse(localStorage.getItem('fa_pomStats') || '{"date":"","count":0,"minutes":0}');
+let sessionLog = JSON.parse(localStorage.getItem('fa_log') || '[]');
+
+if (pomStats.date !== todayStr) {
+  pomStats = {date: todayStr, count: 0, minutes: 0};
+  sessionLog = [];
+}
+
+// Default habits
+if (habits.length === 0) {
+  habits = [
+    { id: 1, name: 'Estudiar sin celular 25min', emoji: '📵', completedDays: [], streak: 0 },
+    { id: 2, name: 'Revisar tareas de la facu', emoji: '📚', completedDays: [], streak: 0 },
+    { id: 3, name: 'Hacer una tarea completa', emoji: '✅', completedDays: [], streak: 0 },
+  ];
+  saveHabits();
+}
+
+function saveTasks() { localStorage.setItem('fa_tasks', JSON.stringify(tasks)); }
+function saveHabits() { localStorage.setItem('fa_habits', JSON.stringify(habits)); }
+function savePomStats() { localStorage.setItem('fa_pomStats', JSON.stringify(pomStats)); localStorage.setItem('fa_log', JSON.stringify(sessionLog)); }
+
+// ===================== DATE =====================
+const dateDisplay = document.getElementById('date-display');
+dateDisplay.textContent = today.toLocaleDateString('es-AR', {weekday:'long', day:'numeric', month:'long'}).toUpperCase();
+
+// ===================== TABS =====================
+function switchTab(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ===================== TOAST =====================
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ===================== POMODORO =====================
+const MODES = { focus: 25*60, short: 5*60, long: 15*60 };
+let currentMode = 'focus';
+let timeLeft = MODES[currentMode];
+let totalTime = MODES[currentMode];
+let timerRunning = false;
+let timerInterval = null;
+let activeTaskName = null;
+
+const motivators = [
+  'Elegí una tarea y arrancá. <strong>25 minutos cambian todo.</strong>',
+  'El celular puede esperar. <strong>Tu futuro no.</strong>',
+  'Una sesión a la vez. <strong>Vos podés.</strong>',
+  'La distracción es el enemigo. <strong>Cerrá las apps y arrancá.</strong>',
+  'Cada Pomodoro completado es una <strong>victoria real.</strong>',
+];
+
+document.getElementById('motivator-text').innerHTML = motivators[Math.floor(Math.random()*motivators.length)];
+
+function setMode(mode, el) {
+  currentMode = mode;
+  timeLeft = MODES[mode];
+  totalTime = MODES[mode];
+  timerRunning = false;
+  clearInterval(timerInterval);
+  document.getElementById('start-btn').textContent = 'ARRANCAR';
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  updateTimerDisplay();
+  document.getElementById('timer-mode-label').textContent = mode === 'focus' ? 'FOCO' : mode === 'short' ? 'DESCANSO CORTO' : 'DESCANSO LARGO';
+  document.getElementById('timer-progress-fill').style.width = '100%';
+  document.getElementById('timer-display').className = 'timer-display' + (mode !== 'focus' ? ' break' : '');
+}
+
+function updateTimerDisplay() {
+  const m = String(Math.floor(timeLeft/60)).padStart(2,'0');
+  const s = String(timeLeft%60).padStart(2,'0');
+  document.getElementById('timer-display').textContent = m+':'+s;
+  const pct = (timeLeft/totalTime)*100;
+  document.getElementById('timer-progress-fill').style.width = pct+'%';
+  if (timeLeft <= 60 && currentMode === 'focus') document.getElementById('timer-display').className = 'timer-display warning';
+}
+
+function toggleTimer() {
+  if (timerRunning) {
+    timerRunning = false;
+    clearInterval(timerInterval);
+    document.getElementById('start-btn').textContent = 'CONTINUAR';
+  } else {
+    timerRunning = true;
+    document.getElementById('start-btn').textContent = 'PAUSAR';
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerDisplay();
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('start-btn').textContent = 'ARRANCAR';
+        if (currentMode === 'focus') {
+          pomStats.count++;
+          pomStats.minutes += 25;
+          savePomStats();
+          const logEntry = { time: new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}), task: activeTaskName || '—' };
+          sessionLog.unshift(logEntry);
+          if (sessionLog.length > 5) sessionLog.pop();
+          savePomStats();
+          updatePomUI();
+          showToast('🎉 ¡POMODORO COMPLETADO! +25min');
+          document.getElementById('motivator-text').innerHTML = motivators[Math.floor(Math.random()*motivators.length)];
+        } else {
+          showToast('✅ DESCANSO TERMINADO — A LABURAR');
+        }
+        timeLeft = MODES[currentMode];
+        totalTime = MODES[currentMode];
+        updateTimerDisplay();
+      }
+    }, 1000);
+  }
+}
+
+function resetTimer() {
+  timerRunning = false;
+  clearInterval(timerInterval);
+  timeLeft = MODES[currentMode];
+  totalTime = MODES[currentMode];
+  document.getElementById('start-btn').textContent = 'ARRANCAR';
+  updateTimerDisplay();
+}
+
+function startPomodoroForTask(taskName) {
+  activeTaskName = taskName;
+  document.getElementById('timer-task-label').textContent = '▶ ' + taskName;
+  document.getElementById('stat-active-task').textContent = taskName;
+  setMode('focus', document.querySelector('.mode-btn'));
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.mode-btn').classList.add('active');
+  switchTab('pomodoro', document.querySelector('.tab'));
+  showToast('⏱ POMODORO INICIADO — ¡ENFOCATE!');
+}
+
+function updatePomUI() {
+  document.getElementById('stat-pomodoros').textContent = pomStats.count;
+  document.getElementById('stat-minutes').textContent = pomStats.minutes;
+  const log = document.getElementById('session-log');
+  if (sessionLog.length === 0) { log.innerHTML = ''; return; }
+  log.innerHTML = '<div style="font-family:Space Mono,monospace;font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:6px;margin-top:12px;">SESIONES</div>' +
+    sessionLog.map(e => `<div class="log-entry"><span>${e.time}</span> — ${e.task}</div>`).join('');
+}
+
+updatePomUI();
+
+// ===================== TASKS =====================
+let taskFilter = 'todas';
+let taskIdCounter = tasks.length > 0 ? Math.max(...tasks.map(t=>t.id))+1 : 1;
+
+function addTask() {
+  const input = document.getElementById('task-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const priority = document.getElementById('task-priority').value;
+  tasks.push({ id: taskIdCounter++, text, priority, done: false, date: todayStr });
+  saveTasks();
+  input.value = '';
+  renderTasks();
+  showToast('✅ TAREA AGREGADA');
+}
+
+function toggleTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (task) { task.done = !task.done; saveTasks(); renderTasks(); }
+  if (task && task.done) showToast('🔥 ¡TAREA COMPLETADA!');
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  saveTasks();
+  renderTasks();
+}
+
+function setFilter(f, el) {
+  taskFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderTasks();
+}
+
+function renderTasks() {
+  const list = document.getElementById('task-list');
+  let filtered = tasks;
+  if (taskFilter === 'pendientes') filtered = tasks.filter(t => !t.done);
+  if (taskFilter === 'completadas') filtered = tasks.filter(t => t.done);
+
+  const done = tasks.filter(t=>t.done).length;
+  document.getElementById('task-progress').innerHTML = `<strong style="color:var(--accent)">${done}</strong> / ${tasks.length} completadas`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty-state">${taskFilter==='completadas' ? 'NINGUNA COMPLETADA AÚN' : 'NO HAY TAREAS — AGREGÁ UNA ARRIBA'}</div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(t => `
+    <div class="task-item ${t.done ? 'done' : ''}">
+      <div class="task-check" onclick="toggleTask(${t.id})">
+        <svg width="11" height="9" fill="none" viewBox="0 0 11 9">
+          <path d="M1 4L4 7.5L10 1" stroke="#0e0e0f" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="task-text">${t.text}</div>
+      <div class="task-priority priority-${t.priority}">${t.priority}</div>
+      ${!t.done ? `<button class="task-start-btn" onclick="startPomodoroForTask('${t.text.replace(/'/g,"\\'")}')">▶ FOCO</button>` : ''}
+      <button class="task-delete" onclick="deleteTask(${t.id})">×</button>
+    </div>
+  `).join('');
+}
+
+renderTasks();
+
+// ===================== HABITS =====================
+let habitIdCounter = habits.length > 0 ? Math.max(...habits.map(h=>h.id))+1 : 10;
+
+function addHabit() {
+  const input = document.getElementById('habit-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const emoji = document.getElementById('habit-emoji').value.trim() || '🎯';
+  habits.push({ id: habitIdCounter++, name: text, emoji, completedDays: [], streak: 0 });
+  saveHabits();
+  input.value = '';
+  document.getElementById('habit-emoji').value = '';
+  renderHabits();
+  showToast('🔥 HÁBITO AGREGADO');
+}
+
+function toggleHabit(id) {
+  const h = habits.find(h => h.id === id);
+  if (!h) return;
+  const idx = h.completedDays.indexOf(todayStr);
+  if (idx === -1) {
+    h.completedDays.push(todayStr);
+    recalcStreak(h);
+    saveHabits();
+    renderHabits();
+    showToast('🔥 ¡HÁBITO COMPLETADO HOY!');
+  } else {
+    h.completedDays.splice(idx, 1);
+    recalcStreak(h);
+    saveHabits();
+    renderHabits();
+  }
+}
+
+function recalcStreak(h) {
+  let streak = 0;
+  let d = new Date(today);
+  while (true) {
+    const ds = d.toISOString().split('T')[0];
+    if (h.completedDays.includes(ds)) { streak++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  h.streak = streak;
+}
+
+function deleteHabit(id) {
+  habits = habits.filter(h => h.id !== id);
+  saveHabits();
+  renderHabits();
+}
+
+function getWeekDays() {
+  const week = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate()-i);
+    week.push(d);
+  }
+  return week;
+}
+
+function renderHabits() {
+  const grid = document.getElementById('habits-grid');
+  const week = getWeekDays();
+  const completedToday = habits.filter(h => h.completedDays.includes(todayStr)).length;
+  const bestStreak = habits.length > 0 ? Math.max(...habits.map(h=>h.streak)) : 0;
+  const totalWeek = habits.reduce((acc, h) => acc + week.filter(d=>h.completedDays.includes(d.toISOString().split('T')[0])).length, 0);
+
+  document.getElementById('h-stat-hoy').textContent = completedToday;
+  document.getElementById('h-stat-racha').textContent = bestStreak;
+  document.getElementById('h-stat-total').textContent = totalWeek;
+
+  if (habits.length === 0) {
+    grid.innerHTML = '<div class="empty-state">AGREGÁ TU PRIMER HÁBITO ARRIBA</div>';
+    return;
+  }
+
+  grid.innerHTML = habits.map(h => {
+    const doneToday = h.completedDays.includes(todayStr);
+    const weekDots = week.map((d, i) => {
+      const ds = d.toISOString().split('T')[0];
+      const done = h.completedDays.includes(ds);
+      const isToday = ds === todayStr;
+      return `<div class="day-dot ${done?'done':''} ${isToday&&!done?'today':''}">${days[d.getDay()]}</div>`;
+    }).join('');
+    return `
+      <div class="habit-card">
+        <div class="habit-icon">${h.emoji}</div>
+        <div class="habit-info">
+          <div class="habit-name">${h.name}</div>
+          <div class="habit-streak">Racha actual: <strong>${h.streak} días 🔥</strong></div>
+          <div class="habit-week">${weekDots}</div>
+        </div>
+        <div class="habit-toggle ${doneToday?'on':''}" onclick="toggleHabit(${h.id})"></div>
+        <button class="task-delete" onclick="deleteHabit(${h.id})" style="opacity:0.4;font-size:18px;">×</button>
+      </div>
+    `;
+  }).join('');
+}
+
+renderHabits();
+</script>
+</body>
+</html>
